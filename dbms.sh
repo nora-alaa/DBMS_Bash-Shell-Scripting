@@ -2,6 +2,7 @@
 export LC_COLLATE=C
 shopt -s extglob
 connectToDb=""
+returnFromFun=""
 
 #_______________________create database________________________
 
@@ -38,30 +39,52 @@ function listDatabase
 }
 
 
+#_______________________list database to select________________________
+
+function listDatabaseToSelect
+{
+        whichDB=( $(ls -d ./DBs/* | cut -d"/" -f3 ) "Back to start" )
+        numberOfDB=${#whichDB[@]}
+
+
+        select opt in "${whichDB[@]}"
+        do
+                if [ "$REPLY" -lt  "$numberOfDB" -a "$REPLY" -gt 0 ]
+                then
+                        (( index = $REPLY -1 ))
+			returnFromFun=${whichDB[$index]}
+                        return 1
+
+                elif [[ $REPLY == $numberOfDB  ]]
+                then
+                        startDBMS
+                else
+                        echo invalid option $REPLY
+                fi
+        done
+}
+
 #_______________________connect to database________________________
 
 function connectToDatabase
 {
-	whichDB=( $(ls -l ./DBs | grep '^d' | cut -d " " -f9 ) "Back to start" )
-	numberOfDB=${#whichDB[@]}
 
+	listDatabaseToSelect
+	connectToDb=$returnFromFun
+	echo go to DB $connectToDb
+	########## func to list menu table
+}
 
-	select opt in "${whichDB[@]}"
-	do
-		if [ "$REPLY" -lt  "$numberOfDB" -a "$REPLY" -gt 0 ]
-		then
-			(( index = $REPLY -1 ))
-			echo go to  ${whichDB[$index]} DB
-			cd ./DBs/${whichDB[$index]}
+#________________________drop database____________________________
 
-		elif [[ $REPLY == $numberOfDB  ]]
-		then 
-			startDBMS
-		else
-                	echo invalid option $REPLY
-		fi
-	done
-	}
+function dropDatabase
+{
+	listDatabaseToSelect
+        nameDbToDrop=$returnFromFun
+	rm -rf ./DBs/${nameDbToDrop}
+        echo drop database $nameDbToDrop successfully 
+}
+
 #________________________creat database____________________________
 
 function startDBMS
@@ -77,7 +100,7 @@ do
 			;;
 		3) connectToDatabase
 			;;
-		4) echo drop database
+		4) dropDatabase
 			;;
 		5) exit
 		       	;;
