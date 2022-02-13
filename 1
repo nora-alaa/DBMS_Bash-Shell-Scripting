@@ -42,26 +42,22 @@ function listDatabase
 
 function connectToDatabase
 {
-	whichDB=( $(ls -l ./DBs | grep '^d' | cut -d " " -f9 ) "Back to start" )
-	numberOfDB=${#whichDB[@]}
+	whichDB=( $(ls -l ./DBs | grep '^d' | cut -d " " -f9 ) "back to start" )
+	numberOfDB="${#whichDB[@]}"
+	(( numberExit = $numberOfDB + 1 ))
 
 
 	select opt in "${whichDB[@]}"
 	do
-		if [ "$REPLY" -lt  "$numberOfDB" -a "$REPLY" -gt 0 ]
-		then
-			(( index = $REPLY -1 ))
-			echo go to  ${whichDB[$index]} DB
-			cd ./DBs/${whichDB[$index]}
-
-		elif [[ $REPLY == $numberOfDB  ]]
-		then 
-			startDBMS
-		else
-                	echo invalid option $REPLY
-		fi
+        	case $REPLY in
+			1) echo $REPLY
+				;;
+               		numberExit) startDBMS
+                        	;;
+                	*) echo invalid option $REPLY;;
+        	esac
 	done
-	}
+}
 #________________________creat database____________________________
 
 function startDBMS
