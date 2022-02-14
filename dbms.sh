@@ -91,7 +91,62 @@ function createTable
 		helperNewCol
 	fi			
 }
+#________________________Select From Table____________________________
 
+function SelectFromTable(){
+        read -p "Please Enter Table Name  : "NameTable
+        
+        if [[ -f $ NameTable ]] ;
+          then
+           PS3="You Select => "
+           select choice in "Select  Al l Records" "Select One Record"  "Select Column" "Exit"
+             do
+               case $choice in
+                    "Select AllRecords" )column -t -s ':' $tbName.type
+                                         column -t -s ':' $NameTable ;;
+                                   
+                    "Select Record" ) colname=`awk -F ":" '{if(NR==1) print $1}' $NameTable`;
+                      read -p "Enter your $colname: " value
+                          if [[ -z $value ]] ;
+                           then
+                              echo "Empty Input"
+                                    
+                            
+                           else if [[ $value =~ [`cut -d':' -f1 $NameTable | grep -x $value`] ]]; then
+            
+                   recordNum=$(awk 'BEGIN{FS=":"}{if ( $1 == "'$value'" ) print NR}' $NameTable)
+                   echo $(awk 'BEGIN{FS=":";}{if ( NR == '$recordNum' ) print $0 }' $NameTable)
+                                       
+                            
+                       fi
+                       fi;;
+                       
+                   "Select Column" )
+                            read -p "PLease Enter Column Number : " value
+                            while ! [[ $value =~ ^[1-9]+$ ]]
+                                 do
+                           
+                                read -p "Column Number Must be Integer : " value
+                             
+                                done
+                                     cut -d':' -f$value $NameTable.type
+                                     cut -d':' -f$value $NameTable     ;;
+                                    
+
+                   "TableMenu " )TableMenu ;;
+                                *)echo "Please, Enter valid Number"
+                                      
+                                  echo "select again :" ;;     
+                                        
+                        esac
+                 done
+        SelectFromTable
+        else
+        echo $NameTable Not Found ;
+
+        fi
+
+}
 
 #________________________list Tables___________________________
 
@@ -353,9 +408,4 @@ done
 }
 
 startDBMS
-
-
-
-
-
 
