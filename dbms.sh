@@ -93,57 +93,58 @@ function createTable
 }
 #________________________Select From Table____________________________
 
-function SelectFromTable(){
-        read -p "Please Enter Table Name  : "NameTable
+function selectFromTable
+{
+        read -p "Please Enter Table Name  : " NameTable
         
-        if [[ -f $ NameTable ]] ;
-          then
-           PS3="You Select => "
-           select choice in "Select  Al l Records" "Select One Record"  "Select Column" "Exit"
-             do
-               case $choice in
-                    "Select AllRecords" )column -t -s ':' $tbName.type
-                                         column -t -s ':' $NameTable ;;
+        if [[ -f ./DBs/$connectToDb/$NameTable.table ]] ;
+        then   
+        	select choice in "Select All Records" "Select by certain condition"  "Select Column" "Exit"
+             	do
+               		case $REPLY in
+                    		1) head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | column -t -s ',' 
+                                	column -t -s ',' ./DBs/$connectToDb/$NameTable.table ;;
                                    
-                    "Select Record" ) colname=`awk -F ":" '{if(NR==1) print $1}' $NameTable`;
-                      read -p "Enter your $colname: " value
-                          if [[ -z $value ]] ;
-                           then
-                              echo "Empty Input"
-                                    
-                            
-                           else if [[ $value =~ [`cut -d':' -f1 $NameTable | grep -x $value`] ]]; then
-            
-                   recordNum=$(awk 'BEGIN{FS=":"}{if ( $1 == "'$value'" ) print NR}' $NameTable)
-                   echo $(awk 'BEGIN{FS=":";}{if ( NR == '$recordNum' ) print $0 }' $NameTable)
-                                       
-                            
-                       fi
-                       fi;;
+                    		2) colname=`awk -F "," '{if(NR==3) print $0}' ./DBs/$connectToDb/$NameTable.metaData`;
+                      			read -p "Enter your $colname: " value
+                          		if [[ -z $value ]]
+                           		then
+                              			echo "Empty Input"                
+                           		else
+
+                                                 if [[ `head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep $value | wc -l` == 1 ]] 
+					         then
+                                              x=`head -3 ./DBs/test/t1.metaData | tail -1 | tr "," "\n" | grep -n $value | cut -d: -f1`	
+							read -p "Enter value for $value: " valueSearch
+							head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\t"
+							awk -F, -v val=$valueSearch '{ if( $'$x' == val ) print $0 }' ./DBs/$connectToDb/$NameTable.table
+
+
+						
+						 else
+							echo "this column doesn't exsit" 								 
+						 fi
+                       			fi
+					;;
                        
-                   "Select Column" )
-                            read -p "PLease Enter Column Number : " value
-                            while ! [[ $value =~ ^[1-9]+$ ]]
-                                 do
-                           
-                                read -p "Column Number Must be Integer : " value
+                   		3) read -p "PLease Enter Column Number : " value
+                            		while ! [[ $value =~ ^[1-9]+$ ]]
+                                 	do
+                                		read -p "Column Number Must be Integer : " value
                              
-                                done
-                                     cut -d':' -f$value $NameTable.type
-                                     cut -d':' -f$value $NameTable     ;;
+                                	done
+                                        head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | cut -d',' -f$value
+                                        cut -d',' -f$value ./DBs/$connectToDb/$NameTable.table     ;;
                                     
 
-                   "TableMenu " )TableMenu ;;
-                                *)echo "Please, Enter valid Number"
-                                      
-                                  echo "select again :" ;;     
+                   		4)TableMenu ;;
+                                *)echo "Please, Enter valid Number"  echo "select again :" ;;     
                                         
                         esac
                  done
-        SelectFromTable
+        selectFromTable
         else
         echo $NameTable Not Found ;
-
         fi
 
 }
