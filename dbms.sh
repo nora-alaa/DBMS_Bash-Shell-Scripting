@@ -98,7 +98,6 @@ function createTable
 function listTables
 {
 
-
 	if [[ `ls -l ./DBs/$connectToDb | grep '.table' | wc -l` == 0 ]]
 	then 
 		echo No tables found	
@@ -110,7 +109,120 @@ function listTables
         TableMenu
 }
 
+#________________________drop Table___________________________
+
+function dropTable
+{       
+        read -p "Please Enter a table name: " NameTable
+
+        if [[ -f ./DBs/$connectToDb/$NameTable.table ]] 
+        then
+                 echo "Are you Sure You Want to drop This Table? Yy/Nn"
+                 read choice
+                     case $choice in
+                           [Yy]*)  rm -r ./DBs/$connectToDb/$NameTable.table
+                                   rm -r ./DBs/$connectToDb/$NameTable.metaData
+                           	   echo "This $NameTable dropped successfully  "  ;;
+
+                            [Nn]*) echo "Delete is Canceled"  ;;
+                               *)  echo invalid Answer $Ans ;;
+                      esac
+         else
+                 echo "The $NameTable Table is Not Found! :("
+   
+      fi
+
+}
+
+
 #________________________insert into Tables___________________________
+
+checkTypeReturn='false'
+type='int'
+
+function checkType
+{
+	case $1 in
+	+([0-9])) type='int' 
+		;;
+	+([a-zA-Z0-9])) type='text' 
+		;;
+	esac
+
+
+	if [[ $2 == $type ]]
+	then
+		checkTypeReturn='true'
+	else
+		checkTypeReturn='false'
+	fi
+}
+
+function checkTypeOfCol
+{
+	found='false'
+	values=$1
+	onlyVals=(   $(echo ${values:7:-1} | tr ',' "\n") )
+	typeVals=( $( tail -1 ./DBs/$connectToDb/${commandInsertArr[2]}.metaData | tr "," "\n" ) )
+
+	found=`awk -F, '{ if($1 == '${onlyVals[0]}') print $1 }' ./DBs/$connectToDb/${commandInsertArr[2]}.table`
+	if [[ $found != "" ]]
+	then
+		echo pk must be unquie
+		return 0
+	fi
+	
+	if [[ onlyVals == "" || ${#onlyVals[@]} != ${#typeVals[@]} ]]
+	then 
+		echo please insert all column data
+		return 0
+
+	else
+		for c in ${!onlyVals[@]}
+		do
+			checkType ${onlyVals[c]} ${typeVals[c]}
+			if [[ $checkTypeReturn == 'false' ]]
+			then 
+				echo "${onlyVals[c]} wrong data type, it is not ${typeVals[c]}"
+				return 0
+			fi
+		done	
+	fi
+
+	echo ${values:7:-1} >> ./DBs/$connectToDb/${commandInsertArr[2]}.table
+	echo "done insert 1 record to database :) "
+
+}
+
+function insertIntoTable
+{
+	echo 'please write command insert like insert into nameTable valuses(nameCol,...)'
+        read -p "please Enter command: " commandInsert
+
+	commandInsertArr=(${commandInsert})
+
+	if [[ ${#commandInsertArr[@]} == 4 ]]
+	then
+
+		if [[ ${commandInsertArr[0]} == 'insert' && ${commandInsertArr[1]} == 'into' && ${commandInsertArr[3]} == "values("*")" ]]
+		then 
+			if [[ -f ./DBs/$connectToDb/${commandInsertArr[2]}.table && -f ./DBs/$connectToDb/${commandInsertArr[2]}.metaData  ]]
+			then
+				checkTypeOfCol ${commandInsertArr[3]}
+			else
+				echo table ${commandInsertArr[2]} not found in database 
+			fi	
+		else
+			echo wrong statement
+
+		fi
+	else
+       		echo you insert more arguments	
+	fi 
+
+}
+
+
 
 
 #________________________Table Menu____________________________
@@ -216,34 +328,6 @@ function dropDatabase
         echo drop database $nameDbToDrop successfully 
 }
 
-<<<<<<< HEAD
-#________________________drop Table___________________________
-
-function dropTable ()
-{       read -p "Please Enter a DataBase name you want to delete it’s table: " nameDatabase
-        if [ -d ./DBs/$nameDatabase ]
-            then
-                echo database $nameDatabase already exists
-                read -p "Please Enter a table name: " NameTable
-        if [[ -f $NameTable ]]; 
-            then
-                 echo "Are you Sure You Want to drop This Table? Yy/Nn"
-                 read choice;
-                     case $Ans in
-                           [Yy]*)  rm -r $NameTable
-                                   rm -r $NameTable.type
-                           echo "This $NameTable dropped successfully  "  ;;
-
-                            [Nn]*) echo "Delete is Canceled"  ;;
-                               * )  echo invalid Answer $Ans ;;
-                      esac
-         else
-                 echo "The $NameTable Table is Not Found! :("
-   
-      fi
-
-}
-=======
 #________________________start DBMS____________________________
 
 function startDBMS
@@ -270,7 +354,6 @@ done
 
 startDBMS
 
->>>>>>> 7e9831adc2fdc56e7db67136fa679afc7d36a72c
 
 
 
