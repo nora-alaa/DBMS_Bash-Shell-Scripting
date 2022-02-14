@@ -155,6 +155,32 @@ function dropDatabase
         echo drop database $nameDbToDrop successfully 
 }
 
+#________________________drop Table___________________________
+
+function dropTable ()
+{       read -p "Please Enter a DataBase name you want to delete it’s table: " nameDatabase
+        if [ -d ./DBs/$nameDatabase ]
+            then
+                echo database $nameDatabase already exists
+                read -p "Please Enter a table name: " NameTable
+        if [[ -f $NameTable ]]; 
+            then
+                 echo "Are you Sure You Want to drop This Table? Yy/Nn"
+                 read choice;
+                     case $Ans in
+                           [Yy]*)  rm -r $NameTable
+                                   rm -r $NameTable.type
+                           echo "This $NameTable dropped successfully  "  ;;
+
+                            [Nn]*) echo "Delete is Canceled"  ;;
+                               * )  echo invalid Answer $Ans ;;
+                      esac
+         else
+                 echo "The $NameTable Table is Not Found! :("
+   
+      fi
+
+}
 
 
 
