@@ -91,6 +91,7 @@ function createTable
 		helperNewCol
 	fi			
 }
+
 #________________________Select From Table____________________________
 
 function selectFromTable
@@ -114,10 +115,10 @@ function selectFromTable
 
                                                  if [[ `head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep $value | wc -l` == 1 ]] 
 					         then
-                                              x=`head -3 ./DBs/test/t1.metaData | tail -1 | tr "," "\n" | grep -n $value | cut -d: -f1`	
+                                              x=`head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep -n $value | cut -d: -f1`	
 							read -p "Enter value for $value: " valueSearch
 							head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\t"
-							awk -F, -v val=$valueSearch '{ if( $'$x' == val ) print $0 }' ./DBs/$connectToDb/$NameTable.table
+							awk -F, -v val=$valueSearch '{ if( $'$x' == val ) print $0 }' ./DBs/$connectToDb/$NameTable.table | tr "," "\t"
 
 
 						
@@ -148,6 +149,64 @@ function selectFromTable
         fi
 
 }
+
+
+
+
+#________________________delete From Table____________________________
+
+function deleteFromTable
+{
+        read -p "Please Enter Table Name  : " NameTable
+        
+        if [[ -f ./DBs/$connectToDb/$NameTable.table ]] ;
+        then   
+        	select choice in "delete All Records" "delete by certain condition" "Exit"
+             	do
+               		case $REPLY in
+                    		1)  echo "" > ./DBs/$connectToDb/$NameTable.table; 
+                                         echo "All rows Deleted Successfully"					
+					 ;;
+                                   
+                    		2) colname=`awk -F "," '{if(NR==3) print $0}' ./DBs/$connectToDb/$NameTable.metaData`;
+                      			read -p "Enter your $colname: " value
+                          		if [[ -z $value ]]
+                           		then
+                              			echo "Empty Input"                
+                           		else
+
+                                                 if [[ `head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep $value | wc -l` == 1 ]] 
+					         then
+                                                        x=`head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep -n $value | cut -d: -f1`	
+							read -p "Enter value for $value to delete: " valueSearch
+							head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\t"
+							awk -F, -v val=$valueSearch '{ if( $'$x' != val ) print $0 }' ./DBs/$connectToDb/$NameTable.table > tmpfile && mv tmpfile ./DBs/$connectToDb/$NameTable.table
+
+                                                        echo "Rows Deleted Successfully"
+
+						
+						 else
+							echo "this column doesn't exsit" 								 
+						 fi
+                       			fi
+					;;
+
+                   		3)TableMenu ;;
+                                *)echo "Please, Enter valid Number"  echo "select again :" ;;     
+                                        
+                        esac
+                 done
+        selectFromTable
+        else
+        echo $NameTable Not Found ;
+        fi
+
+}
+
+
+
+
+
 
 #________________________list Tables___________________________
 
