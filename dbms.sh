@@ -5,6 +5,14 @@ connectToDb=""
 returnFromFun=""
 PS3="You Select => "
 
+function printInto
+{
+	echo
+	echo "       *" $1 "*               "               
+	echo
+}
+
+
 #________________________insert new column____________________________
 
 function insertNewCol
@@ -12,7 +20,7 @@ function insertNewCol
 	read -p "please insert name of new column: " nameCol
 
         if [[ $infoNewTable[0] == *"$nameCol"* ]]; then
- 		 echo This column $nameCol  already exsits
+ 		 printInto This column $nameCol  already exsits
 		 helperNewCol
 	fi  
 	infoNewTable[0]+=$nameCol","
@@ -55,7 +63,7 @@ function finishAddTable
 
 function helperNewCol
 {
-	echo '--------- Please Select :) ---------'     
+	printInto '--------- Please Select :) ---------'     
         options=("Insert new column" "Finish" "Exit")
         select opt in "${options[@]}"
          do
@@ -78,15 +86,15 @@ function createTable
 	read -p "please insert name of table: " nameTable
 	if [ -f ./DBs/$connectToDb/$nameTable.table ] 
 	then
-		echo table $nameTable is exist
+		printInto "table $nameTable is exist"
 
 	elif [ -d ./DBs/$nameTable ]
 	then 
-		echo invalid, there is folder has same name
+		printInto "invalid, there is folder has same name"
 
 	elif [[ $nameTable == *"/"* ]]
 	then 
-		echo invalid "$nameTable" table name 
+		echo "invalid "$nameTable" table name" 
 	else
 		helperNewCol
 	fi			
@@ -100,6 +108,7 @@ function selectFromTable
         
         if [[ -f ./DBs/$connectToDb/$NameTable.table ]] ;
         then   
+PS3=$PS3"From Menu select6: "
         	select choice in "Select All Records" "Select by certain condition"  "Select Column" "Exit"
              	do
                		case $REPLY in
@@ -110,7 +119,7 @@ function selectFromTable
                       			read -p "Enter your $colname: " value
                           		if [[ -z $value ]]
                            		then
-                              			echo "Empty Input"                
+                              			printInto "Empty Input"                
                            		else
 
                                                  if [[ `head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep $value | wc -l` == 1 ]] 
@@ -123,7 +132,7 @@ function selectFromTable
 
 						
 						 else
-							echo "this column doesn't exsit" 								 
+							printInto "this column doesn't exsit" 								 
 						 fi
                        			fi
 					;;
@@ -139,13 +148,13 @@ function selectFromTable
                                     
 
                    		4)TableMenu ;;
-                                *)echo "Please, Enter valid Number"  echo "select again :" ;;     
+                                *)printInto "Please, Enter valid Number"  echo "select again :" ;;     
                                         
                         esac
                  done
         selectFromTable
         else
-        echo $NameTable Not Found ;
+        printInto $NameTable Not Found ;
         fi
 
 }
@@ -161,18 +170,19 @@ function deleteFromTable
         
         if [[ -f ./DBs/$connectToDb/$NameTable.table ]] ;
         then   
+			PS3=$PS3"From Menu delete: "
         	select choice in "delete All Records" "delete by certain condition" "Exit"
              	do
                		case $REPLY in
                     		1)  echo "" > ./DBs/$connectToDb/$NameTable.table; 
-                                         echo "All rows Deleted Successfully"					
+                                         printInto "All rows Deleted Successfully"					
 					 ;;
                                    
                     		2) colname=`awk -F "," '{if(NR==3) print $0}' ./DBs/$connectToDb/$NameTable.metaData`;
                       			read -p "Enter your $colname: " value
                           		if [[ -z $value ]]
                            		then
-                              			echo "Empty Input"                
+                              			printInto "Empty Input"                
                            		else
 
                                                  if [[ `head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\n" | grep $value | wc -l` == 1 ]] 
@@ -182,11 +192,11 @@ function deleteFromTable
 							head -3 ./DBs/$connectToDb/$NameTable.metaData | tail -1 | tr "," "\t"
 							awk -F, -v val=$valueSearch '{ if( $'$x' != val ) print $0 }' ./DBs/$connectToDb/$NameTable.table > tmpfile && mv tmpfile ./DBs/$connectToDb/$NameTable.table
 
-                                                        echo "Rows Deleted Successfully"
+                                                        printInto "Rows Deleted Successfully"
 
 						
 						 else
-							echo "this column doesn't exsit" 								 
+							printInto "this column doesn't exsit" 								 
 						 fi
                        			fi
 					;;
@@ -198,7 +208,7 @@ function deleteFromTable
                  done
         selectFromTable
         else
-        echo $NameTable Not Found ;
+        printInto "$NameTable Not Found" ;
         fi
 
 }
@@ -215,12 +225,13 @@ function listTables
 
 	if [[ `ls -l ./DBs/$connectToDb | grep '.table' | wc -l` == 0 ]]
 	then 
-		echo No tables found	
+		printInto "No tables found"	
 	else
-        	echo '--------- Tables are: ---------'
+        	printInto '--------- Tables are: ---------'
 
 		ls -l ./DBs/$connectToDb | grep '.table' | awk '{print NR"-", $9}'
 	fi
+	read -n1
         TableMenu
 }
 
@@ -237,13 +248,13 @@ function dropTable
                      case $choice in
                            [Yy]*)  rm -r ./DBs/$connectToDb/$NameTable.table
                                    rm -r ./DBs/$connectToDb/$NameTable.metaData
-                           	   echo "This $NameTable dropped successfully  "  ;;
+                           	   printInto "This $NameTable dropped successfully  "  ;;
 
-                            [Nn]*) echo "Delete is Canceled"  ;;
+                            [Nn]*) printInto "Delete is Canceled"  ;;
                                *)  echo invalid Answer $Ans ;;
                       esac
          else
-                 echo "The $NameTable Table is Not Found! :("
+                 printInto "The $NameTable Table is Not Found! :("
    
       fi
 
@@ -280,16 +291,18 @@ function checkTypeOfCol
 	onlyVals=(   $(echo ${values:7:-1} | tr ',' "\n") )
 	typeVals=( $( tail -1 ./DBs/$connectToDb/${commandInsertArr[2]}.metaData | tr "," "\n" ) )
 
-	found=`awk -F, '{ if($1 == '${onlyVals[0]}') print $1 }' ./DBs/$connectToDb/${commandInsertArr[2]}.table`
+	#found=`awk -F, '{ if($1 == '${onlyVals[0]}') print $1 }' ./DBs/$connectToDb/${commandInsertArr[2]}.table`
+	found=`awk -F, -v val=${onlyVals[0]} '{ if( $1 == val ) print $1 }' ./DBs/$connectToDb/${commandInsertArr[2]}.table` 
+
 	if [[ $found != "" ]]
 	then
-		echo pk must be unquie
+		printInto "pk must be unquie"
 		return 0
 	fi
 	
 	if [[ onlyVals == "" || ${#onlyVals[@]} != ${#typeVals[@]} ]]
 	then 
-		echo please insert all column data
+		printInto "please insert all column data"
 		return 0
 
 	else
@@ -298,20 +311,20 @@ function checkTypeOfCol
 			checkType ${onlyVals[c]} ${typeVals[c]}
 			if [[ $checkTypeReturn == 'false' ]]
 			then 
-				echo "${onlyVals[c]} wrong data type, it is not ${typeVals[c]}"
+				printInto "${onlyVals[c]} wrong data type, it is not ${typeVals[c]}"
 				return 0
 			fi
 		done	
 	fi
 
 	echo ${values:7:-1} >> ./DBs/$connectToDb/${commandInsertArr[2]}.table
-	echo "done insert 1 record to database :) "
+	printInto "done insert 1 record to database :) "
 
 }
 
 function insertIntoTable
 {
-	echo 'please write command insert like insert into nameTable valuses(nameCol,...)'
+	printInto 'please write command insert like insert into nameTable valuses(nameCol,...)'
         read -p "please Enter command: " commandInsert
 
 	commandInsertArr=(${commandInsert})
@@ -325,14 +338,14 @@ function insertIntoTable
 			then
 				checkTypeOfCol ${commandInsertArr[3]}
 			else
-				echo table ${commandInsertArr[2]} not found in database 
+				printInto "table ${commandInsertArr[2]} not found in database" 
 			fi	
 		else
-			echo wrong statement
+			printInto "wrong statement"
 
 		fi
 	else
-       		echo you insert more arguments	
+       		printInto "you insert more arguments"	
 	fi 
 
 }
@@ -344,7 +357,9 @@ function insertIntoTable
 
 function TableMenu 
 {
-	echo '--------- Please Select From Tabel Menu :) ---------'	
+	clear
+        PS3=$connectToDb":You Select => "
+	printInto '--------- Please Select From Tabel Menu :) ---------'	
 	options=("Create Table" "List Tables" "Drop Table" "Insert Into Table"  "Select From Table"  "Delete From Table"  "Back to start")
 	select opt in "${options[@]}"
 	do	
@@ -366,19 +381,24 @@ function TableMenu
 
 function createDatabase
 {
-        read -p "please enter name of data base " nameDatabase
+        read -p "please enter name of data base: " nameDatabase
 	if [ -d ./DBs/$nameDatabase ]
 	then 
-		echo database $nameDatabase already exists
+		
+		printInto "database $nameDatabase already exists"
+		
 	elif [[ $nameDatabase == *"/"* ]]
 	then 
-		echo invalid database name
+		printInto "invalid database name"
 	elif [ -f ./DBs/$nameDatabase ]
 	then 
-		echo invalid, there is file has same name
+		printInto " invalid, there is file has same name"
+		
 	else
 		mkdir -p ./DBs/$nameDatabase
-		echo done create database $nameDatabase
+
+		printInto " done create database $nameDatabase "
+		
 	fi
 }
 
@@ -389,11 +409,17 @@ function listDatabase
 { 
 	if [[ `ls -l ./DBs | grep '^d' | wc -l` == 0 ]]
 	then 
-		echo No database found	
+		printInto "No database found"1
+		
 	else
-		echo "Database are: "
+		
+		 printInto "Database are" 
+		
+
 		ls -l ./DBs | grep '^d' | awk '{print NR"-", $9}'
 	fi
+	read -n1
+	startDBMS
 }
 
 
@@ -403,8 +429,8 @@ function listDatabaseToSelect
 {
         whichDB=( $(ls -d ./DBs/* | cut -d"/" -f3 ) "Back to start" )
         numberOfDB=${#whichDB[@]}
-
-	echo '--------- name of databases ---------' 
+	PS3="select number of database to "$1" : "
+	printInto '---------------- select number of databases ----------------' 
         select opt in "${whichDB[@]}"
         do
                 if [ "$REPLY" -lt  "$numberOfDB" -a "$REPLY" -gt 0 ]
@@ -417,7 +443,7 @@ function listDatabaseToSelect
                 then
                         startDBMS
                 else
-                        echo invalid option $REPLY
+                        printInto "invalid option $REPLY"
                 fi
         done
 }
@@ -427,9 +453,9 @@ function listDatabaseToSelect
 function connectToDatabase
 {
 
-	listDatabaseToSelect
+	listDatabaseToSelect "connect"
 	connectToDb=$returnFromFun
-	echo go to DB $connectToDb
+	printInto "go to DB $connectToDb"
 	TableMenu 
 }
 
@@ -437,17 +463,34 @@ function connectToDatabase
 
 function dropDatabase
 {
-	listDatabaseToSelect
+	listDatabaseToSelect "drop"
         nameDbToDrop=$returnFromFun
 	rm -rf ./DBs/${nameDbToDrop}
-        echo drop database $nameDbToDrop successfully 
+        printInto "drop database $nameDbToDrop successfully" 
+	printInto '------------------------ drop again or back to menu -------------------'
+	PS3="You Select => "
+	options=("Drop another Database" "Menu database")
+	select opt in "${options[@]}"
+	do
+		case $REPLY in 
+			1) dropDatabase
+				;;
+			2) startDBMS
+			       	;;
+			*) echo invalid option $REPLY;;
+		esac
+	done
 }
 
 #________________________start DBMS____________________________
 
 function startDBMS
 {
-echo '--------- start DBMS ---------'
+clear
+PS3="You Select => "
+
+printInto '------------------------ start DBMS --------------------'
+
 options=("CREATE Database" "LIST ALL Database" "CONNECT TO Database" "DROP database" "EXIT")
 select opt in "${options[@]}"
 do

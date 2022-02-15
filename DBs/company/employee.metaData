@@ -1,0 +1,4 @@
+employee
+3
+id,name,salary
+int,text,int
